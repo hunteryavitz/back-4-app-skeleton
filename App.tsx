@@ -1,29 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { View, Button, Text, SafeAreaView } from 'react-native';
-
-// In a React Native application
 import Parse from 'parse/react-native.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-//Initializing the SDK
 Parse.setAsyncStorage(AsyncStorage);
-//Paste below the Back4App Application ID AND the JavaScript KEY
 Parse.initialize('5HjeuWlRNyi4Qo8cJE6mngNin8emued64p5Ka6DO', 'nAUqNqShvELZoqzXcmXA8ejXsXQY33sTWtB8ZAtB');
-//Point to Back4App Parse API address
 Parse.serverURL = 'https://parseapi.back4app.com/';
 
 const App = () => {
   const [user, setUser] = useState(new Parse.Object('User'));
+  const [hello, setHello] = useState('');
+
+  // const helloFunction = async () => {
+  //   return await Parse.Cloud.run("helloTest");
+  // }
+  async function helloFunction() {
+    try {
+      const result = await Parse.Cloud.run('helloTest');
+      setHello(result);
+      console.log(result);
+    } catch (error) {
+      console.log('Error: ', error);
+    }
+  }
+
+  // create a const from an async function that returns a promise
 
   async function addUser() {
     try {
-      //create a new Parse Object instance
       const newUser = new Parse.Object('User');
-      //define the attributes you want for your Object
-      newUser.set('name', 'John');
-      newUser.set('email', 'john@back4app.com');
-      //save it on Back4App Data Store
       await newUser.save();
     } catch (error) {
       console.log('Error saving new person: ', error);
@@ -31,34 +36,42 @@ const App = () => {
   }
 
   async function fetchUser() {
-    //create your Parse Query using the Person Class you've created
     let query = new Parse.Query('User');
-    //run the query to retrieve all objects on Person class, optionally you can add your filters
     let queryResult = await query.find();
-    //the resul is an arry of objects. Pick the first result
+    console.log('all users:');
+    console.log(queryResult);
     const currentUser = queryResult[0];
-    //access the Parse Object attributes
-    console.log('person id: ', currentUser.get('id'));
-    console.log('person name: ', currentUser.get('name'));
-    console.log('person email: ', currentUser.get('email'));
+    console.log('current user:');
+    console.log(currentUser);
+    console.log('current user objectId: ', currentUser.id);
+    console.log('can read:');
+    let acl = currentUser.get('ACL');
+    console.log(acl);
+    let entireThing = acl.get('read');
+    console.log(entireThing);
+    console.log('current user email: ', currentUser.get());
     setUser(currentUser);
   }
 
   useEffect(() => {
-    fetchUser()
+    fetchUser().then(r => console.log(r));
   }, []);
 
   return (
       <SafeAreaView>
         <View>
           <Text>Name: {user.get('name')}</Text>
+          <Text>{hello || 'hi'}</Text>
           <Text>email: {user.get('email')}</Text>
           <Button title='Add user' onPress={addUser} />
           <Button title='Fetch user' onPress={fetchUser} />
+          <Button title='Fetch greeting' onPress={helloFunction} />
           {/* Your other components here ....*/}
         </View>
       </SafeAreaView>
   )
 }
+
+
 
 export default App;
