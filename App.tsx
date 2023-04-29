@@ -1,77 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { View, Button, Text, SafeAreaView } from 'react-native';
-import Parse from 'parse/react-native.js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from 'react';
+import {createAppContainer, createSwitchNavigator} from "react-navigation";
+import { createStackNavigator } from "react-navigation-stack";
+import { createMaterialBottomTabNavigator } from "react-navigation-material-bottom-tabs";
+import AccountScreen from "./src/screens/AccountScreen";
+import SignUpScreen from "./src/screens/SignUpScreen";
+import SignInScreen from "./src/screens/SignInScreen";
+import EmployeeCreateScreen from "./src/screens/GeoPathCreateScreen";
+import EmployeeListScreen from "./src/screens/GeoPathListScreen";
+import {Provider as AuthProvider} from "./src/context/AuthContext";
+import { setNavigator } from "./src/navigationRef";
+import ResolveAuthScreen from "./src/screens/ResolveAuthScreen";
+import EmployeeDetailScreen from "./src/screens/GeoPathDetailScreen";
+import { Provider as LocationProvider } from "./src/context/LocationContext";
 
-Parse.setAsyncStorage(AsyncStorage);
-Parse.initialize('5HjeuWlRNyi4Qo8cJE6mngNin8emued64p5Ka6DO', 'nAUqNqShvELZoqzXcmXA8ejXsXQY33sTWtB8ZAtB');
-Parse.serverURL = 'https://parseapi.back4app.com/';
+const switchNavigator = createSwitchNavigator(
+    {
+      ResolveAuth: ResolveAuthScreen,
+      loginFlow: createStackNavigator({
+        SignUp: SignUpScreen,
+        SignIn: SignInScreen
+      }),
+      mainFlow: createMaterialBottomTabNavigator({
+        employeeFlow: createStackNavigator({
+          EmployeeList: EmployeeListScreen,
+          EmployeeDetail: EmployeeDetailScreen
+        }),
+      EmployeeCreate: EmployeeCreateScreen,
+      Account: AccountScreen
+      })
+    });
 
-const App = () => {
-  const [user, setUser] = useState(new Parse.Object('User'));
-  const [hello, setHello] = useState('');
+const App = createAppContainer(switchNavigator);
 
-  // const helloFunction = async () => {
-  //   return await Parse.Cloud.run("helloTest");
-  // }
-  async function helloFunction() {
-    try {
-      const result = await Parse.Cloud.run('helloTest');
-      setHello(result);
-      console.log(result);
-    } catch (error) {
-      console.log('Error: ', error);
-    }
-  }
-
-  // create a const from an async function that returns a promise
-
-  async function addUser() {
-    try {
-      const newUser = new Parse.Object('User');
-      await newUser.save();
-    } catch (error) {
-      console.log('Error saving new person: ', error);
-    }
-  }
-
-  async function fetchUser() {
-    let query = new Parse.Query('User');
-    let queryResult = await query.find();
-    console.log('all users:');
-    console.log(queryResult);
-    const currentUser = queryResult[0];
-    console.log('current user:');
-    console.log(currentUser);
-    console.log('current user objectId: ', currentUser.id);
-    console.log('can read:');
-    let acl = currentUser.get('ACL');
-    console.log(acl);
-    let entireThing = acl.get('read');
-    console.log(entireThing);
-    console.log('current user email: ', currentUser.get());
-    setUser(currentUser);
-  }
-
-  useEffect(() => {
-    fetchUser().then(r => console.log(r));
-  }, []);
-
+export default () => {
   return (
-      <SafeAreaView>
-        <View>
-          <Text>Name: {user.get('name')}</Text>
-          <Text>{hello || 'hi'}</Text>
-          <Text>email: {user.get('email')}</Text>
-          <Button title='Add user' onPress={addUser} />
-          <Button title='Fetch user' onPress={fetchUser} />
-          <Button title='Fetch greeting' onPress={helloFunction} />
-          {/* Your other components here ....*/}
-        </View>
-      </SafeAreaView>
-  )
+      <LocationProvider>
+        <AuthProvider>
+          <App
+              ref={(navigator) => {
+                setNavigator(navigator)
+              }}
+          />
+        </AuthProvider>
+      </LocationProvider>
+  );
 }
-
-
-
-export default App;
