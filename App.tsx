@@ -4,7 +4,7 @@ import Parse from 'parse/react-native.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 Parse.setAsyncStorage(AsyncStorage);
-Parse.initialize('5HjeuWlRNyi4Qo8cJE6mngNin8emued64p5Ka6DO', 'nAUqNqShvELZoqzXcmXA8ejXsXQY33sTWtB8ZAtB');
+Parse.initialize('', '');
 Parse.serverURL = 'https://parseapi.back4app.com/';
 
 const App = () => {
